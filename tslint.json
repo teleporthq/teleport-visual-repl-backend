@@ -1,0 +1,15 @@
+{
+  "defaultSeverity": "error",
+  "extends": ["tslint:latest", "tslint-config-prettier"],
+  "rules": {
+    "prefer-object-spread": false,
+    "ordered-imports": false,
+    "object-literal-sort-keys": false,
+    "curly": false,
+    "no-submodule-imports": false,
+    "interface-name": [true, "never-prefix"],
+    "no-console": {
+      "options": ["log", "debug", "time", "timeEnd", "trace"]
+    }
+  }
+}
