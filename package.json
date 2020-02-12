@@ -11,8 +11,12 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^3.0.8",
+    "config": "^3.2.5",
     "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "joi": "^14.3.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql": "^2.18.1"
   },
   "devDependencies": {
     "@types/node": "^13.7.0",
