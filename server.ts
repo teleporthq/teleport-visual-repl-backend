@@ -1,11 +1,18 @@
 const express = require("express");
+const cors = require("cors");
+
 const app = express();
+const PORT = process.env.PORT || 8080;
 
-app.get("/", (req, res) => {
-  res.send("Helooooooooo, dar ce avem noi aici?");
-});
+// CONNECT TO DB
 
-const PORT = process.env.PORT || 3000;
+// MIDDLEWARE
+app.use(cors());
+app.use(express.json());
+
+// ROUTES
+const authorizeRoute = require("./routes/authorize");
+app.use("/authorize", authorizeRoute);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
