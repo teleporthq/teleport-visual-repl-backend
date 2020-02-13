@@ -1,35 +1,39 @@
 import * as express from "express";
+import { User, Sequelize } from "../models/sequelize";
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const jwt = require("jsonwebtoken");
 
-// placeholder to test out routes till we connect to a db
-
-const fakeDataBase = [];
-
 router.post("/register", async (req, res) => {
-  const isFound = fakeDataBase.find(user => req.body.name === user.name);
+  const isFound = await User.findOne({
+    where: {
+      [Sequelize.Op.or]: [
+        { email: req.body.email },
+        { Username: req.body.username }
+      ]
+    }
+  }).catch(err => console.log(err));
   if (isFound) {
     res.status(418).send({
-      error: `User ${req.body.name} already exists! Pick something else!`
+      error: `Username or email in use! Pick something else!`
     });
     return;
   }
 
   try {
     const hashedPassword = await hashPassword(req.body.password);
-    fakeDataBase.push({
-      name: req.body.name,
-      password: hashedPassword,
-      email: req.body.email
+    User.create({
+      Username: req.body.username,
+      Password: hashedPassword,
+      eMail: req.body.email
     });
     const user = { name: req.body.name, email: req.body.email };
     const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
     res.status(201).send({
       accessToken,
       message: "Register succesfull!",
-      greet: `Welcome ${req.body.name}`
+      greet: `Welcome ${req.body.username}`
     });
   } catch (error) {
     res.status(400).send({ error: "Something went wrong" });
@@ -37,18 +41,22 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/signin", async (req, res) => {
-  const isFound = fakeDataBase.find(user => {
-    return req.body.name === user.name;
-  });
+  const isFound = await User.findOne({
+    where: {
+      [Sequelize.Op.or]: [
+        { email: req.body.loginToken },
+        { Username: req.body.loginToken }
+      ]
+    }
+  }).catch(err => console.log(err));
 
   if (!isFound) {
-    res.status(401).send({ error: "User does not exist!" });
+    res.status(401).send({ error: "Invalid credentials!" });
     return;
   }
-
   const passwordMatch = await bcrypt.compare(
     req.body.password,
-    isFound.password
+    isFound.Password
   );
 
   if (passwordMatch) {
@@ -59,7 +67,7 @@ router.post("/signin", async (req, res) => {
     res.status(200).send({
       accessToken,
       message: "Sign in succesfull!",
-      greet: `Welcome ${req.body.name}`
+      greet: `Welcome ${isFound.Username}`
     });
     return;
   }
