@@ -1,30 +1,26 @@
 import * as express from "express";
+import { User, Sequelize } from "../models/sequelize";
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
-// placeholder to test out routes till we connect to a db
-
-const fakeDataBase = [
-  { name: "Tudor", password: "123" },
-  { name: "Ale", password: "1234" },
-  { name: "Vlad", password: "111" },
-  { name: "Ionut", password: "florinSalam" }
-];
-
 router.post("/signin", async (req, res) => {
-  const isFound = fakeDataBase.find(user => {
-    return req.body.name === user.name;
-  });
+  const isFound = await User.findOne({
+    where: {
+      [Sequelize.Op.or]: [
+        { email: req.body.loginToken },
+        { Username: req.body.loginToken }
+      ]
+    }
+  }).catch(err => console.log(err));
 
   if (!isFound) {
-    res.status(401).send({ error: "User does not exist!" });
+    res.status(401).send({ error: "Invalid credentials!" });
     return;
   }
-
   const passwordMatch = await bcrypt.compare(
     req.body.password,
-    isFound.password
+    isFound.Password
   );
   // Check with Postman with a new registered user and after with someone unregistered to see the difference
   console.log(
@@ -35,7 +31,7 @@ router.post("/signin", async (req, res) => {
   if (passwordMatch) {
     res.status(200).send({
       message: "Sign in succesfull!",
-      greet: `Welcome ${req.body.name}`
+      greet: `Welcome ${isFound.Username}`
     });
     return;
   }
@@ -43,25 +39,37 @@ router.post("/signin", async (req, res) => {
   res.status(403).send({ error: "Wrong username or password! " });
 });
 
-router.post("/register", (req, res) => {
-  const isFound = fakeDataBase.find(user => req.body.name === user.name);
+router.post("/register", async (req, res) => {
+  const isFound = await User.findOne({
+    where: {
+      [Sequelize.Op.or]: [
+        { email: req.body.email },
+        { Username: req.body.username }
+      ]
+    }
+  }).catch(err => console.log(err));
+
   if (isFound) {
     res.status(418).send({
-      error: `User ${req.body.name} already exists! Pick something else!`
+      error: `Username or email in use! Pick something else!`
     });
-  } else {
-    bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
-      try {
-        fakeDataBase.push({ name: req.body.name, password: hash });
-        res.status(201).send({
-          message: "Register succesfull!",
-          greet: `Welcome ${req.body.name}`
-        });
-      } catch (err) {
-        console.log(err);
-      }
-    });
+    return;
   }
+  bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
+    try {
+      User.create({
+        Username: req.body.username,
+        Password: hash,
+        eMail: req.body.email
+      });
+      res.status(201).send({
+        message: "Register succesfull!",
+        greet: `Welcome ${req.body.username}`
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  });
 });
 
 module.exports = router;
