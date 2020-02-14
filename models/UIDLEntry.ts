@@ -5,6 +5,10 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
+    EntryName: {
+      type: DataTypes.STRING,
+      unique: true
+    },
     UIDLEntry: {
       type: DataTypes.JSON
     }
