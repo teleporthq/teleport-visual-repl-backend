@@ -11,7 +11,18 @@ const authorization = (req, res, next) => {
     if (err) {
       return res.sendStatus(403);
     }
+
+    const userId = req.method === "GET" ? req.params.userId : req.body.userId;
+
+    console.log(userId, user.userId.toString());
+
+    if (userId !== user.userId.toString()) {
+      return res.sendStatus(403);
+    }
+
     req.user = user;
+    console.log(user);
+
     next();
   });
 };

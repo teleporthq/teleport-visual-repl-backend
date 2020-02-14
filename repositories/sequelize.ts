@@ -22,7 +22,7 @@ const User = UserModel(sequelize, Sequelize);
 
 const UIDLEntry = UIDLEntryModel(sequelize, Sequelize);
 
-UIDLEntry.belongsTo(User);
+User.hasMany(UIDLEntry, { onDelete: "cascade" });
 
 sequelize.sync().then(() => {
   console.log(`Database in sync!`);
