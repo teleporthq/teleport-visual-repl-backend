@@ -16,11 +16,10 @@ router.post("/save", authenticate, async (req, res) => {
 
     if (isFound) {
       isFound.UIDLEntry = uidlentry;
-      await isFound.save();
-      res.status(200).send({
+      await isFound.save({ fields: ["EntryName"] });
+      return res.status(200).send({
         success: `Success, uidl changed`
       });
-      return;
     }
 
     await UIDLEntry.create({
@@ -28,7 +27,7 @@ router.post("/save", authenticate, async (req, res) => {
       UIDLEntry: uidlentry,
       EntryName: entryname
     });
-    res.status(200).send({
+    return res.status(200).send({
       success: `Success, uidl added`
     });
   } catch (err) {
@@ -50,10 +49,9 @@ router.delete("/delete", authenticate, async (req, res) => {
 
     if (isFound) {
       await isFound.destroy();
-      res.status(200).send({
+      return res.status(200).send({
         error: `Success, entry deleted`
       });
-      return;
     }
 
     throw new Error("Did not find what to delete");
@@ -64,4 +62,40 @@ router.delete("/delete", authenticate, async (req, res) => {
   }
 });
 
+router.get("/:userid", authenticate, async (req, res) => {
+  const entryNames = await UIDLEntry.findAll({
+    attributes: ["EntryName"],
+    where: {
+      UserUserId: req.params.userid
+    }
+  });
+
+  if (entryNames) {
+    return res.status(200).send({
+      success: entryNames.map(entry => entry.EntryName)
+    });
+  }
+  return res.status(400).send({
+    error: "Did not find any entries"
+  });
+});
+
+router.get("/:userid/:entryname", authenticate, async (req, res) => {
+  const { userid, entryname } = req.params;
+
+  const isFound = await UIDLEntry.findOne({
+    where: {
+      UserUserId: userid,
+      EntryName: entryname
+    }
+  });
+  if (isFound) {
+    return res.status(200).send({
+      success: isFound
+    });
+  }
+  return res.status(400).send({
+    error: "Is not found"
+  });
+});
 module.exports = router;
