@@ -6,37 +6,43 @@ const saltRounds = 10;
 const jwt = require("jsonwebtoken");
 
 router.post("/register", async (req, res) => {
-  const isFound = await User.findOne({
-    where: {
-      [Sequelize.Op.or]: [
-        { email: req.body.email },
-        { Username: req.body.username }
-      ]
-    }
-  }).catch(err => console.log(err));
-  if (isFound) {
-    res.status(418).send({
-      error: `Username or email in use! Pick something else!`
-    });
-    return;
-  }
-
   try {
+    const isFound = await User.findOne({
+      where: {
+        [Sequelize.Op.or]: [
+          { email: req.body.email },
+          { Username: req.body.username }
+        ]
+      }
+    });
+
+    if (isFound) {
+      res.status(418).send({
+        error: `Username or email in use! Pick something else!`
+      });
+      return;
+    }
+
     const hashedPassword = await hashPassword(req.body.password);
-    User.create({
+
+    const user = await User.create({
       Username: req.body.username,
       Password: hashedPassword,
       eMail: req.body.email
     });
-    const user = { name: req.body.name, email: req.body.email };
-    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+    const accessToken = jwt.sign(
+      user.dataValues,
+      process.env.ACCESS_TOKEN_SECRET
+    );
+    console.log(accessToken);
+
     res.status(201).send({
       accessToken,
       message: "Register succesfull!",
       greet: `Welcome ${req.body.username}`
     });
   } catch (error) {
-    res.status(400).send({ error: "Something went wrong" });
+    res.status(400).send({ error: "Something went wrong: " + error });
   }
 });
 
