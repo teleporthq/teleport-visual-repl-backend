@@ -4,11 +4,11 @@ const authorization = require("../controllers/authorization");
 const uidlController = require("../controllers/uidlController");
 
 // GET ALL UIDL NAMES THAT THE USER HAS
-router.get("/:userId", authorization, uidlController.getAllUIDLNames);
+router.get("/all", authorization, uidlController.getAllUIDLNames);
 
 // GET SPECIFIC UIDL FOR USER BY ITS NAME
 router.get(
-  "/:userId/:entryName",
+  "/one/:entryName",
   authorization,
   uidlController.getUIDLByNameAndUser
 );

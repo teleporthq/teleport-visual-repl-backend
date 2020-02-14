@@ -84,9 +84,10 @@ exports.signIn = async (req, res) => {
 };
 
 exports.delete = async (req, res) => {
+  const userId = req.user.userId;
   try {
     const isFound = await User.findOne({
-      where: { UserId: req.body.userId }
+      where: { UserId: userId }
     });
     if (isFound) {
       isFound.destroy();

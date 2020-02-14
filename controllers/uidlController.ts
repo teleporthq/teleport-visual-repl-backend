@@ -2,18 +2,19 @@ import { UIDLEntry } from "../repositories/sequelize";
 
 exports.save = async (req, res) => {
   try {
-    const { userId, uidlEntry, entryName } = req.body;
+    const { uidlEntry, entryName } = req.body;
+    const userId = req.user.userId;
 
-    const isFound = await UIDLEntry.findOne({
+    const dbUidlEntry = await UIDLEntry.findOne({
       where: {
         UserUserId: userId,
         EntryName: entryName
       }
     });
 
-    if (isFound) {
-      isFound.UIDLEntry = uidlEntry;
-      await isFound.save({ fields: ["UIDLEntry"] });
+    if (dbUidlEntry) {
+      dbUidlEntry.UIDLEntry = uidlEntry;
+      await dbUidlEntry.save({ fields: ["UIDLEntry"] });
       return res.status(200).send({
         success: `Success, uidl changed`
       });
@@ -36,21 +37,21 @@ exports.save = async (req, res) => {
 
 exports.delete = async (req, res) => {
   try {
-    const { userId, entryName } = req.body;
-    const isFound = await UIDLEntry.findOne({
+    const { entryName } = req.body;
+    const userId = req.user.userId;
+
+    const uidlEntry = await UIDLEntry.findOne({
       where: {
         UserUserId: userId,
         EntryName: entryName
       }
     });
-    if (isFound) {
-      await isFound.destroy();
-      return res.status(200).send({
-        error: `Success, entry deleted`
-      });
-    }
 
-    throw new Error("Did not find what to delete");
+    await uidlEntry.destroy();
+
+    return res.status(200).send({
+      success: `Success, entry deleted`
+    });
   } catch {
     res.status(403).send({
       error: `Could not delete entry`
@@ -59,17 +60,18 @@ exports.delete = async (req, res) => {
 };
 
 exports.getUIDLByNameAndUser = async (req, res) => {
-  const { userId, entryName } = req.params;
+  const { entryName } = req.params;
+  const userId = req.user.userId;
 
-  const isFound = await UIDLEntry.findOne({
+  const uidlEntry = await UIDLEntry.findOne({
     where: {
       UserUserId: userId,
       EntryName: entryName
     }
   });
-  if (isFound) {
+  if (uidlEntry) {
     return res.status(200).send({
-      success: isFound
+      success: uidlEntry
     });
   }
   return res.status(400).send({
@@ -78,10 +80,11 @@ exports.getUIDLByNameAndUser = async (req, res) => {
 };
 
 exports.getAllUIDLNames = async (req, res) => {
+  const userId = req.user.userId;
   const entryNames = await UIDLEntry.findAll({
     attributes: ["EntryName"],
     where: {
-      UserUserId: req.params.userId
+      UserUserId: userId
     }
   });
 
