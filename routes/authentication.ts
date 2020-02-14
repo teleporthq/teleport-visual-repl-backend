@@ -6,6 +6,7 @@ const saltRounds = 10;
 const jwt = require("jsonwebtoken");
 const authorization = require("../controllers/authorization");
 
+// REGISTER NEW USER
 router.post("/register", async (req, res) => {
   try {
     const isFound = await User.findOne({
@@ -31,10 +32,14 @@ router.post("/register", async (req, res) => {
       Password: hashedPassword,
       eMail: req.body.email
     });
-    const accessToken = jwt.sign(
-      user.dataValues,
-      process.env.ACCESS_TOKEN_SECRET
-    );
+
+    const jwtDetails = {
+      userId: user.UserId,
+      username: user.Username
+    };
+
+    const accessToken = jwt.sign(jwtDetails, process.env.ACCESS_TOKEN_SECRET);
+    console.log(accessToken);
 
     res.status(201).send({
       accessToken,
@@ -46,6 +51,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// LOGIN (EXISTING USER!!!!)
 router.post("/signin", async (req, res) => {
   const isFound = await User.findOne({
     where: {
@@ -67,7 +73,7 @@ router.post("/signin", async (req, res) => {
 
   if (passwordMatch) {
     // - generate JWT token for user
-    const user = { name: isFound.name, email: isFound.email };
+    const user = { username: isFound.Username, userId: isFound.UserId };
     const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
 
     res.status(200).send({
@@ -81,6 +87,7 @@ router.post("/signin", async (req, res) => {
   res.status(403).send({ error: "Wrong username or password! " });
 });
 
+// DELETE USER
 router.delete("/delete", authorization, async (req, res) => {
   try {
     const isFound = await User.findOne({
