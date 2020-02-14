@@ -30,10 +30,13 @@ router.post("/register", async (req, res) => {
       Password: hashedPassword,
       eMail: req.body.email
     });
-    const accessToken = jwt.sign(
-      user.dataValues,
-      process.env.ACCESS_TOKEN_SECRET
-    );
+
+    const jwtDetails = {
+      userId: user.UserId,
+      username: user.Username
+    };
+
+    const accessToken = jwt.sign(jwtDetails, process.env.ACCESS_TOKEN_SECRET);
     console.log(accessToken);
 
     res.status(201).send({
@@ -67,7 +70,7 @@ router.post("/signin", async (req, res) => {
 
   if (passwordMatch) {
     // - generate JWT token for user
-    const user = { name: isFound.name, email: isFound.email };
+    const user = { username: isFound.Username, userId: isFound.UserId };
     const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
 
     res.status(200).send({
