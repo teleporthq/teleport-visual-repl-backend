@@ -56,7 +56,7 @@ router.post("/save", authenticate, async (req, res) => {
 
     if (isFound) {
       isFound.UIDLEntry = uidlentry;
-      await isFound.save({ fields: ["EntryName"] });
+      await isFound.save({ fields: ["UIDLEntry"] });
       return res.status(200).send({
         success: `Success, uidl changed`
       });
@@ -96,7 +96,7 @@ router.delete("/delete", authenticate, async (req, res) => {
 
     throw new Error("Did not find what to delete");
   } catch {
-    res.status(400).send({
+    res.status(403).send({
       error: `Could not delete entry`
     });
   }
