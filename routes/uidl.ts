@@ -72,7 +72,7 @@ router.post("/save", authenticate, async (req, res) => {
     });
   } catch (err) {
     res.status(400).send({
-      error: `Something went terribly wrong`
+      error: `Something went terribly wrong: ` + err
     });
   }
 });
