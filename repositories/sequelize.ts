@@ -1,6 +1,6 @@
 const Sequelize = require("sequelize");
-const UserModel = require("./User");
-const UIDLEntryModel = require("./UIDLEntry");
+const UserModel = require("../models/User");
+const UIDLEntryModel = require("../models/UIDLEntry");
 
 const sequelize = new Sequelize(
   process.env.DATABASE,

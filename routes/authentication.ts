@@ -1,9 +1,10 @@
 import * as express from "express";
-import { User, Sequelize } from "../models/sequelize";
+import { User, Sequelize } from "../repositories/sequelize";
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const jwt = require("jsonwebtoken");
+const authorization = require("../controllers/authorization");
 
 router.post("/register", async (req, res) => {
   try {
@@ -34,7 +35,6 @@ router.post("/register", async (req, res) => {
       user.dataValues,
       process.env.ACCESS_TOKEN_SECRET
     );
-    console.log(accessToken);
 
     res.status(201).send({
       accessToken,
@@ -79,6 +79,21 @@ router.post("/signin", async (req, res) => {
   }
 
   res.status(403).send({ error: "Wrong username or password! " });
+});
+
+router.delete("/delete", authorization, async (req, res) => {
+  try {
+    const isFound = await User.findOne({
+      where: { UserId: req.body.userId }
+    });
+    if (isFound) {
+      isFound.destroy();
+      return res.status(200).send({ success: "User deleted!" });
+    }
+    throw new Error(`User does not exist`);
+  } catch (err) {
+    return res.status(400).send({ error: "Something baaaad happened " + err });
+  }
 });
 
 const hashPassword = async (password): Promise<string> => {

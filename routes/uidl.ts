@@ -1,10 +1,10 @@
 import * as express from "express";
-import { UIDLEntry } from "../models/sequelize";
+import { UIDLEntry } from "../repositories/sequelize";
 const router = express.Router();
-const authenticate = require("../controllers/authorization");
+const authorization = require("../controllers/authorization");
 
 // GET ALL UIDL NAMES THAT THE USER HAS
-router.get("/:userid", authenticate, async (req, res) => {
+router.get("/:userid", authorization, async (req, res) => {
   const entryNames = await UIDLEntry.findAll({
     attributes: ["EntryName"],
     where: {
@@ -12,7 +12,7 @@ router.get("/:userid", authenticate, async (req, res) => {
     }
   });
 
-  if (entryNames) {
+  if (entryNames.length) {
     return res.status(200).send({
       success: entryNames.map(entry => entry.EntryName)
     });
@@ -23,7 +23,7 @@ router.get("/:userid", authenticate, async (req, res) => {
 });
 
 // GET SPECIFIC UIDL FOR USER BY ITS NAME
-router.get("/:userid/:entryname", authenticate, async (req, res) => {
+router.get("/:userid/:entryname", authorization, async (req, res) => {
   const { userid, entryname } = req.params;
 
   const isFound = await UIDLEntry.findOne({
@@ -43,7 +43,7 @@ router.get("/:userid/:entryname", authenticate, async (req, res) => {
 });
 
 // ADD UIDL OR UPDATE EXISTING UIDL FOR THE USER
-router.post("/save", authenticate, async (req, res) => {
+router.post("/save", authorization, async (req, res) => {
   try {
     const { userid, uidlentry, entryname } = req.body;
 
@@ -78,7 +78,7 @@ router.post("/save", authenticate, async (req, res) => {
 });
 
 // DELETE UIDL FOR THE USER
-router.delete("/delete", authenticate, async (req, res) => {
+router.delete("/delete", authorization, async (req, res) => {
   try {
     const { userid, entryname } = req.body;
     const isFound = await UIDLEntry.findOne({
