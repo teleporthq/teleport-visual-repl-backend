@@ -1,8 +1,48 @@
 import * as express from "express";
 import { UIDLEntry } from "../models/sequelize";
 const router = express.Router();
-const authenticate = require("../controllers/authenticate");
+const authenticate = require("../controllers/authorization");
 
+// GET ALL UIDL NAMES THAT THE USER HAS
+router.get("/:userid", authenticate, async (req, res) => {
+  const entryNames = await UIDLEntry.findAll({
+    attributes: ["EntryName"],
+    where: {
+      UserUserId: req.params.userid
+    }
+  });
+
+  if (entryNames) {
+    return res.status(200).send({
+      success: entryNames.map(entry => entry.EntryName)
+    });
+  }
+  return res.status(400).send({
+    error: "Did not find any entries"
+  });
+});
+
+// GET SPECIFIC UIDL FOR USER BY ITS NAME
+router.get("/:userid/:entryname", authenticate, async (req, res) => {
+  const { userid, entryname } = req.params;
+
+  const isFound = await UIDLEntry.findOne({
+    where: {
+      UserUserId: userid,
+      EntryName: entryname
+    }
+  });
+  if (isFound) {
+    return res.status(200).send({
+      success: isFound
+    });
+  }
+  return res.status(400).send({
+    error: "Is not found"
+  });
+});
+
+// ADD UIDL OR UPDATE EXISTING UIDL FOR THE USER
 router.post("/save", authenticate, async (req, res) => {
   try {
     const { userid, uidlentry, entryname } = req.body;
@@ -37,6 +77,7 @@ router.post("/save", authenticate, async (req, res) => {
   }
 });
 
+// DELETE UIDL FOR THE USER
 router.delete("/delete", authenticate, async (req, res) => {
   try {
     const { userid, entryname } = req.body;
@@ -46,7 +87,6 @@ router.delete("/delete", authenticate, async (req, res) => {
         EntryName: entryname
       }
     });
-
     if (isFound) {
       await isFound.destroy();
       return res.status(200).send({
@@ -62,40 +102,4 @@ router.delete("/delete", authenticate, async (req, res) => {
   }
 });
 
-router.get("/:userid", authenticate, async (req, res) => {
-  const entryNames = await UIDLEntry.findAll({
-    attributes: ["EntryName"],
-    where: {
-      UserUserId: req.params.userid
-    }
-  });
-
-  if (entryNames) {
-    return res.status(200).send({
-      success: entryNames.map(entry => entry.EntryName)
-    });
-  }
-  return res.status(400).send({
-    error: "Did not find any entries"
-  });
-});
-
-router.get("/:userid/:entryname", authenticate, async (req, res) => {
-  const { userid, entryname } = req.params;
-
-  const isFound = await UIDLEntry.findOne({
-    where: {
-      UserUserId: userid,
-      EntryName: entryname
-    }
-  });
-  if (isFound) {
-    return res.status(200).send({
-      success: isFound
-    });
-  }
-  return res.status(400).send({
-    error: "Is not found"
-  });
-});
 module.exports = router;
