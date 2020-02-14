@@ -16,7 +16,7 @@ router.post("/save", authenticate, async (req, res) => {
 
     if (isFound) {
       isFound.UIDLEntry = uidlentry;
-      await isFound.save({ fields: ["EntryName"] });
+      await isFound.save({ fields: ["UIDLEntry"] });
       return res.status(200).send({
         success: `Success, uidl changed`
       });
@@ -56,7 +56,7 @@ router.delete("/delete", authenticate, async (req, res) => {
 
     throw new Error("Did not find what to delete");
   } catch {
-    res.status(400).send({
+    res.status(403).send({
       error: `Could not delete entry`
     });
   }
@@ -70,12 +70,12 @@ router.get("/:userid", authenticate, async (req, res) => {
     }
   });
 
-  if (entryNames) {
+  if (entryNames.length) {
     return res.status(200).send({
       success: entryNames.map(entry => entry.EntryName)
     });
   }
-  return res.status(400).send({
+  return res.status(404).send({
     error: "Did not find any entries"
   });
 });
@@ -94,7 +94,7 @@ router.get("/:userid/:entryname", authenticate, async (req, res) => {
       success: isFound
     });
   }
-  return res.status(400).send({
+  return res.status(404).send({
     error: "Is not found"
   });
 });
