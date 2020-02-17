@@ -15,37 +15,44 @@ const hashPassword = async (password: string): Promise<string> => {
 
 const addUser = async (req: Request, res: Response): Promise<Response> => {
   const { eMail, username, password } = req.body;
-  const isFound = await userRepository.findUserByEmailOrUsername(
-    eMail,
-    username
-  );
+  try {
+    const isFound = await userRepository.findUserByEmailOrUsername(
+      eMail,
+      username
+    );
 
-  if (isFound) {
-    return res.status(418).send({
-      error: `Username or eMail in use! Pick something else!`
+    if (isFound) {
+      return res.status(418).send({
+        error: `Username or eMail in use! Pick something else!`
+      });
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const user = await userRepository.createNewUser(
+      eMail,
+      username,
+      hashedPassword
+    );
+
+    const jwtDetails = {
+      userId: user.UserId,
+      username: user.Username
+    };
+
+    const accessToken = jwt.sign(jwtDetails, process.env.ACCESS_TOKEN_SECRET);
+
+    return res.status(201).send({
+      accessToken,
+      message: "Register succesfull!",
+      greet: `Welcome ${username}`
+    });
+  } catch (err) {
+    console.log("Error", err);
+    return res.status(400).send({
+      error: "Register unsuccesfull!"
     });
   }
-
-  const hashedPassword = await hashPassword(password);
-
-  const user = await userRepository.createNewUser(
-    eMail,
-    username,
-    hashedPassword
-  );
-
-  const jwtDetails = {
-    userId: user.UserId,
-    username: user.Username
-  };
-
-  const accessToken = jwt.sign(jwtDetails, process.env.ACCESS_TOKEN_SECRET);
-
-  return res.status(201).send({
-    accessToken,
-    message: "Register succesfull!",
-    greet: `Welcome ${username}`
-  });
 };
 
 const signIn = async (req: Request, res: Response): Promise<Response> => {
