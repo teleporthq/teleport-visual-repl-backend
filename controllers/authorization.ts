@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const authorization = (req, res, next) => {
-  const authHeader = req.headers["access-token"];
+  const authHeader: String = req.headers["access-token"];
 
   if (authorization == null) {
     return res.sendStatus(403);
@@ -12,7 +12,6 @@ const authorization = (req, res, next) => {
       return res.sendStatus(403);
     }
 
-    console.log(req.body, user.userId);
     req.user = user;
     next();
   });

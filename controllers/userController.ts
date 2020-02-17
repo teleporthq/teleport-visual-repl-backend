@@ -1,7 +1,7 @@
-import { User, Sequelize } from "../repositories/sequelize";
+import jwt from "jsonwebtoken";
+const userRepository = require("../repositories/userRepository");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const jwt = require("jsonwebtoken");
 
 const hashPassword = async (password): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -12,14 +12,11 @@ const hashPassword = async (password): Promise<string> => {
 };
 
 exports.add = async (req, res) => {
-  const isFound = await User.findOne({
-    where: {
-      [Sequelize.Op.or]: [
-        { eMail: req.body.eMail },
-        { Username: req.body.username }
-      ]
-    }
-  });
+  const { eMail, username, password } = req.body;
+  const isFound = await userRepository.findUserByEmailOrUsername(
+    eMail,
+    username
+  );
 
   if (isFound) {
     return res.status(418).send({
@@ -27,13 +24,13 @@ exports.add = async (req, res) => {
     });
   }
 
-  const hashedPassword = await hashPassword(req.body.password);
+  const hashedPassword = await hashPassword(password);
 
-  const user = await User.create({
-    Username: req.body.username,
-    Password: hashedPassword,
-    eMail: req.body.eMail
-  });
+  const user = await userRepository.createNewUser(
+    eMail,
+    username,
+    hashedPassword
+  );
 
   const jwtDetails = {
     userId: user.UserId,
@@ -46,54 +43,50 @@ exports.add = async (req, res) => {
   return res.status(201).send({
     accessToken,
     message: "Register succesfull!",
-    greet: `Welcome ${req.body.username}`
+    greet: `Welcome ${username}`
   });
 };
 
 exports.signIn = async (req, res) => {
-  const isFound = await User.findOne({
-    where: {
-      [Sequelize.Op.or]: [
-        { eMail: req.body.loginToken },
-        { Username: req.body.loginToken }
-      ]
-    }
-  }).catch(err => console.log(err));
+  try {
+    const loginToken: string = req.body.loginToken;
+    const userInDb = await userRepository.findUserByEmailOrUsername(
+      loginToken,
+      loginToken
+    );
 
-  if (!isFound) {
+    if (!userInDb) {
+      return res.status(403).send({ error: "Invalid credentials!" });
+    }
+    const passwordMatch = await bcrypt.compare(
+      req.body.password,
+      userInDb.Password
+    );
+
+    if (passwordMatch) {
+      // - generate JWT token for user
+      const user = { username: userInDb.Username, userId: userInDb.UserId };
+      const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+
+      return res.status(200).send({
+        accessToken,
+        message: "Sign in succesfull!",
+        greet: `Welcome ${userInDb.Username}`
+      });
+    }
+  } catch (err) {
     return res.status(403).send({ error: "Invalid credentials!" });
   }
-  const passwordMatch = await bcrypt.compare(
-    req.body.password,
-    isFound.Password
-  );
-
-  if (passwordMatch) {
-    // - generate JWT token for user
-    const user = { username: isFound.Username, userId: isFound.UserId };
-    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-
-    return res.status(200).send({
-      accessToken,
-      message: "Sign in succesfull!",
-      greet: `Welcome ${isFound.Username}`
-    });
-  }
-
-  return res.status(403).send({ error: "Invalid credentials!" });
 };
 
 exports.delete = async (req, res) => {
   const userId = req.user.userId;
   try {
-    const isFound = await User.findOne({
-      where: { UserId: userId }
-    });
-    if (isFound) {
-      isFound.destroy();
-      return res.status(200).send({ success: "User deleted!" });
-    }
-    throw new Error(`User does not exist`);
+    const userInDb = await userRepository.findUserById(userId);
+
+    userRepository.deleteUser(userInDb);
+
+    return res.status(200).send({ success: "User deleted!" });
   } catch (err) {
     return res.status(400).send({ error: "Something baaaad happened " + err });
   }
