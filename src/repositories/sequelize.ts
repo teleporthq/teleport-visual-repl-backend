@@ -1,6 +1,6 @@
-const Sequelize = require("sequelize");
-const UserModel = require("../models/User");
-const UIDLEntryModel = require("../models/UIDLEntry");
+import { Sequelize } from "sequelize";
+import { UserModel } from "../models/User";
+import { UIDLEntryModel } from "../models/UIDLEntry";
 
 const sequelize = new Sequelize(
   process.env.DATABASE,
@@ -8,7 +8,7 @@ const sequelize = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT,
+    dialect: "mysql",
     pool: {
       max: 10,
       min: 0,
@@ -18,9 +18,9 @@ const sequelize = new Sequelize(
   }
 );
 
-const User = UserModel(sequelize, Sequelize);
+const User = UserModel(sequelize);
 
-const UIDLEntry = UIDLEntryModel(sequelize, Sequelize);
+const UIDLEntry = UIDLEntryModel(sequelize);
 
 User.hasMany(UIDLEntry, { onDelete: "cascade" });
 
@@ -28,4 +28,4 @@ sequelize.sync().then(() => {
   console.log(`Database in sync!`);
 });
 
-export { User, UIDLEntry, Sequelize };
+export { User, UIDLEntry };

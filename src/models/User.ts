@@ -1,5 +1,8 @@
-module.exports = (sequelize, DataTypes) => {
-  var User = sequelize.define("Users", {
+import { Sequelize, DataTypes } from "sequelize";
+import { IUserModelStatic } from "../interfaces/user";
+
+export const UserModel = (sequelize: Sequelize) => {
+  const User = <IUserModelStatic>sequelize.define("Users", {
     UserId: {
       type: DataTypes.INTEGER,
       primaryKey: true,

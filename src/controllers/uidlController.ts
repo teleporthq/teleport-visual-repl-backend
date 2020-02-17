@@ -1,10 +1,12 @@
-const uidlRepository = require("../repositories/uidlRepository");
+import { uidlRepository } from "../repositories/uidlRepository";
+import { Request, Response } from "express";
+import { UIDLComponentName } from "../interfaces/uidl";
 
-exports.save = async (req, res) => {
+const saveUidl = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const { uidlEntry, entryName } = req.body;
+    const { uidlEntry, entryName, user } = req.body;
 
-    const userId = req.user.userId;
+    const userId = user.userId;
 
     const dbUidlEntry = await uidlRepository.findEntry(entryName, userId);
 
@@ -15,7 +17,11 @@ exports.save = async (req, res) => {
       });
     }
 
-    await uidlRepository.addNewEntry(userId, uidlEntry, entryName);
+    await uidlRepository.addNewEntry({
+      userId,
+      uidlEntryString: uidlEntry,
+      entryName
+    });
 
     return res.status(200).send({
       success: `Success, uidl added`
@@ -27,10 +33,10 @@ exports.save = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+const deleteUidl = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const { entryName } = req.body;
-    const userId = req.user.userId;
+    const { entryName, user } = req.body;
+    const userId = user.userId;
 
     const uidlEntry = await uidlRepository.findEntry(entryName, userId);
 
@@ -46,9 +52,12 @@ exports.delete = async (req, res) => {
   }
 };
 
-exports.getUIDLByNameAndUser = async (req, res) => {
+const getUIDLByNameAndUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const { entryName } = req.params;
-  const userId = req.user.userId;
+  const userId = req.body.user.userId;
 
   const uidlEntry = await uidlRepository.findEntry(entryName, userId);
   if (uidlEntry) {
@@ -61,10 +70,15 @@ exports.getUIDLByNameAndUser = async (req, res) => {
   });
 };
 
-exports.getAllUIDLNames = async (req, res) => {
-  const userId = req.user.userId;
+const getAllUIDLNames = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const userId = req.body.user.userId;
 
-  const entryNames = await uidlRepository.findAllEntryNamesByUser(userId);
+  const entryNames: UIDLComponentName[] = await uidlRepository.findAllEntryNamesByUser(
+    userId
+  );
 
   if (entryNames.length) {
     return res.status(200).send({
@@ -75,3 +89,12 @@ exports.getAllUIDLNames = async (req, res) => {
     error: "Did not find any entries"
   });
 };
+
+const uidlController = {
+  saveUidl,
+  deleteUidl,
+  getUIDLByNameAndUser,
+  getAllUIDLNames
+};
+
+export { uidlController };

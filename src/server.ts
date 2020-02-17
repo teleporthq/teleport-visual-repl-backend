@@ -1,6 +1,8 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
+import { authenticationRoute } from "./routes/authentication";
+import { uidlRoute } from "./routes/uidl";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -10,9 +12,6 @@ app.use(cors());
 app.use(express.json());
 
 // ROUTES
-const authenticationRoute = require("./routes/authentication");
-const uidlRoute = require("./routes/uidl");
-
 app.use("/authentication", authenticationRoute);
 app.use("/uidl", uidlRoute);
 

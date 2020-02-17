@@ -1,17 +1,19 @@
+import { Request, Response } from "express";
+import { userRepository } from "../repositories/userRepository";
 import jwt from "jsonwebtoken";
-const userRepository = require("../repositories/userRepository");
-const bcrypt = require("bcrypt");
+import bcrypt from "bcrypt";
+
 const saltRounds = 10;
 
-const hashPassword = async (password): Promise<string> => {
+const hashPassword = async (password: string): Promise<string> => {
   return new Promise((resolve, reject) => {
-    bcrypt.hash(password, saltRounds, (err, hash: string) => {
+    bcrypt.hash(password, saltRounds, (err: Error, hash: string) => {
       err ? reject(err) : resolve(hash);
     });
   });
 };
 
-exports.add = async (req, res) => {
+const addUser = async (req: Request, res: Response): Promise<Response> => {
   const { eMail, username, password } = req.body;
   const isFound = await userRepository.findUserByEmailOrUsername(
     eMail,
@@ -38,7 +40,6 @@ exports.add = async (req, res) => {
   };
 
   const accessToken = jwt.sign(jwtDetails, process.env.ACCESS_TOKEN_SECRET);
-  console.log(accessToken);
 
   return res.status(201).send({
     accessToken,
@@ -47,7 +48,7 @@ exports.add = async (req, res) => {
   });
 };
 
-exports.signIn = async (req, res) => {
+const signIn = async (req: Request, res: Response): Promise<Response> => {
   try {
     const loginToken: string = req.body.loginToken;
     const userInDb = await userRepository.findUserByEmailOrUsername(
@@ -79,8 +80,8 @@ exports.signIn = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
-  const userId = req.user.userId;
+const deleteUser = async (req: Request, res: Response): Promise<Response> => {
+  const userId = req.body.user.userId;
   try {
     const userInDb = await userRepository.findUserById(userId);
 
@@ -91,3 +92,11 @@ exports.delete = async (req, res) => {
     return res.status(400).send({ error: "Something baaaad happened " + err });
   }
 };
+
+const userController = {
+  addUser,
+  signIn,
+  deleteUser
+};
+
+export { userController };
