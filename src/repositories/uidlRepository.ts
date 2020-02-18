@@ -56,6 +56,7 @@ const deleteEntry = (uidlEntry: IUidlEntryModel): void => {
   uidlEntry.destroy();
 };
 
+//Nu-i place lu' Ionut asa da ce sa-i facem
 const uidlRepository = {
   addNewEntry,
   saveEntryChanges,

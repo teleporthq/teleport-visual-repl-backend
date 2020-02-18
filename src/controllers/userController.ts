@@ -82,6 +82,7 @@ const signIn = async (req: Request, res: Response): Promise<Response> => {
         greet: `Welcome ${userInDb.Username}`
       });
     }
+    throw new Error();
   } catch (err) {
     return res.status(403).send({ error: "Invalid credentials!" });
   }
