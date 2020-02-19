@@ -16,6 +16,15 @@ const hashPassword = async (password: string): Promise<string> => {
 class userController {
   static async addUser(req: Request, res: Response): Promise<Response> {
     const { eMail, username, password } = req.body;
+    if (
+      eMail !== eMail.replace(/\s/g, "") ||
+      username !== username.replace(/^\s+|\s+$/g, "") ||
+      !password
+    ) {
+      return res.status(422).send({
+        error: "Invalid input data"
+      });
+    }
     try {
       const isFound = await userRepository.findUserByEmailOrUsername(
         eMail,
