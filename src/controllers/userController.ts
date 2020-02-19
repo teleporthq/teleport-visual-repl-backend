@@ -15,7 +15,11 @@ const hashPassword = async (password: string): Promise<string> => {
 
 class userController {
   static async addUser(req: Request, res: Response): Promise<Response> {
-    const { eMail, username, password } = req.body;
+    const {
+      eMail,
+      username,
+      password
+    }: { eMail: string; username: string; password: string } = req.body;
     if (
       eMail !== eMail.replace(/\s/g, "") ||
       username !== username.replace(/^\s+|\s+$/g, "") ||
@@ -39,11 +43,9 @@ class userController {
 
       const hashedPassword = await hashPassword(password);
 
-      const user = await userRepository.createNewUser(
-        eMail,
-        username,
-        hashedPassword
-      );
+      const userParams = { eMail, username, password: hashedPassword };
+
+      const user = await userRepository.createNewUser(userParams);
 
       const jwtDetails = {
         userId: user.UserId,
@@ -89,7 +91,7 @@ class userController {
         return res.status(200).send({
           accessToken,
           message: "Sign in succesfull!",
-          greet: `Welcome ${userInDb.Username}`
+          greet: `Welcome, ${userInDb.Username}`
         });
       }
       throw new Error();

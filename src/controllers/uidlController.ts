@@ -34,7 +34,7 @@ class uidlController {
         success: `Success, uidl added`
       });
     } catch (err) {
-      res.status(400).send({
+      return res.status(400).send({
         error: `Something went terribly wrong: ` + err
       });
     }
@@ -53,7 +53,7 @@ class uidlController {
         success: `Success, entry deleted`
       });
     } catch {
-      res.status(403).send({
+      return res.status(403).send({
         error: `Could not delete entry`
       });
     }
