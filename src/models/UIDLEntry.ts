@@ -9,6 +9,7 @@ export const UIDLEntryModel = (sequelize: Sequelize) => {
       autoIncrement: true
     },
     EntryName: {
+      allowNull: false,
       type: DataTypes.STRING
     },
     UIDLEntry: {
